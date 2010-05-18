@@ -54,6 +54,6 @@ const char* libcallex_call(const char* context) {
 		mov _r, eax
 	}
 	r += _r;
-	delete args;
+	delete[] args;
 	return r.c_str();
 }
