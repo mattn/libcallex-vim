@@ -42,10 +42,11 @@ const char* libcallex_call(const char* context) {
 		}
 		narg++;
 	}
+#if defined(_MVC_VER)
 	for (unsigned long n = 0; n < narg; n++) {
-		unsigned long Arg = args[narg-n-1];
+		unsigned long _a = args[narg-n-1];
 		_asm {
-			mov eax, Arg
+			mov eax, _a
 			push eax
 		}
 	}
@@ -53,6 +54,22 @@ const char* libcallex_call(const char* context) {
 		call _p
 		mov _r, eax
 	}
+#elif defined(__GNUC__)
+	for (unsigned long n = 0; n < narg; n++) {
+		unsigned long _a = args[narg-n-1];
+		__asm__ (
+			"mov %%eax, %0;"
+			"push %%eax;"
+			::"r"(_a):"%eax"
+		);
+	}
+	__asm__ (
+		"call %1;"
+		"mov %0, %%eax;"
+		:"=r"(_r)
+		:"r"(_p)
+	);
+#endif
 	r += _r;
 	delete[] args;
 	return r.c_str();
