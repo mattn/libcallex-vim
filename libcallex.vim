@@ -55,7 +55,7 @@ function! s:template.call(func, ...) dict
   \}
   let ret = eval(libcall(s:libfile, 'libcallex_call', s:transform(ctx)))
   if type(ret) == 1
-11    throw ret
+    throw ret
   elseif type(ret) == 4
 	if has_key(ret, 'error')
       throw ret.error
