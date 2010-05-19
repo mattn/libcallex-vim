@@ -10,6 +10,10 @@ function! s:transform(obj)
     let s = substitute(s, '^''\(.*\)''$', '\1', '')
     let s = substitute(s, "''", "'", 'g')
     let s = substitute(s, '"', '\"', 'g')
+    let s = substitute(s, '"', '\\"', 'g')
+    let s = substitute(s, '\n', '\\n', 'g')
+    let s = substitute(s, '\r', '\\r', 'g')
+    let s = substitute(s, '\t', '\\t', 'g')
     return '"'.s.'"'
   elseif t == 2
     throw "can't treat function reference"
@@ -36,9 +40,10 @@ let s:template = {'libname': '', 'handle': 0, 'rettype': ''}
 function! s:template.call(func, ...) dict
   let arguments = []
   let rettype = ''
-  if len(a:000) > 0
+  if len(a:000) == 1
     let arguments = a:000[0]
-  elseif len(a:000) > 1
+  elseif len(a:000) == 2
+    let arguments = a:000[0]
     let rettype = a:000[1]
   endif
   let ctx = {
@@ -48,6 +53,12 @@ function! s:template.call(func, ...) dict
   \ 'rettype': rettype
   \}
   return libcall('libcallex.dll', 'libcallex_call', s:transform(ctx))
+endfunction
+
+function! s:template.free() dict
+  call remove(self, 'call')
+  call remove(self, 'free')
+  return libcall('libcallex.dll', 'libcallex_free', s:transform(self))
 endfunction
 
 function! libcallex.load(name) dict
