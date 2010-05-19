@@ -53,11 +53,21 @@ function! s:template.call(func, ...) dict
   \ 'arguments': arguments,
   \ 'rettype': rettype
   \}
-  let ctx = eval(libcall(s:libfile, 'libcallex_call', s:transform(ctx)))
-  for n in range(len(arguments))
-    let arguments[n] = ctx.arguments[n]
-  endfor
-  return ctx.return
+  let ret = eval(libcall(s:libfile, 'libcallex_call', s:transform(ctx)))
+  if type(ret) == 1
+11    throw ret
+  elseif type(ret) == 4
+	if has_key(ret, 'error')
+      throw ret.error
+    else
+      for n in range(len(arguments))
+        let arguments[n] = ret.arguments[n]
+      endfor
+      return ret.return
+    endif
+  else
+    throw ret
+  endif
 endfunction
 
 function! libcallex.free(ctx)
@@ -69,6 +79,9 @@ function! libcallex.load(name) dict
   let lib = copy(s:template)
   let lib.libname = a:name
   let lib.handle = 0 + libcall(s:libfile, 'libcallex_load', a:name)
+  if lib.handle == 0
+    throw "can't load library: \"" . a:name . "\""
+  endif
   return lib
 endfunction
 

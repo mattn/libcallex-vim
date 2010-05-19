@@ -12,80 +12,101 @@ const char* libcallex_load(const char* libname) {
 
 extern "C" _declspec(dllexport)
 const char* libcallex_call(const char* context) {
-	picojson::value v;
 	static std::string r;
+	picojson::value v;
 	std::string err = picojson::parse(v, context, context + strlen(context));
-	if (!err.empty() || !v.is<picojson::object>()) {
-		return "";
+	if (!err.empty()) {
+		return "faild to parse arguments";
 	}
-	unsigned long _r = 0;
+	if (!v.is<picojson::object>()) {
+		return "unknown type of arguments";
+	}
 	picojson::object obj = v.get<picojson::object>();
-	HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
-	std::string f = obj["function"].get<std::string>();
+	unsigned long* args = NULL;
+	try {
+		unsigned long _r = 0;
+		HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
+		std::string f = obj["function"].get<std::string>();
 
-	typedef int (__stdcall *FUNCTION)(void);
-	FUNCTION _p = GetProcAddress(h, f.c_str());
+		typedef int (__stdcall *FUNCTION)(void);
+		FUNCTION _p = GetProcAddress(h, f.c_str());
 
-	std::string rettype = obj["rettype"].get<std::string>();
-	picojson::array arg = obj["arguments"].get<picojson::array>();
-	unsigned long narg = 0;
-	unsigned long* args = new unsigned long[arg.size()];
-	for (picojson::array::iterator it = arg.begin();
-			it != arg.end(); it++) {
-		args[narg] = 0;
-		if (it->is<std::string>()) {
-			args[narg] = (unsigned long)(it->get<std::string>().c_str());
-		} else
-		if (it->is<double>()) {
-			args[narg] = (unsigned long)(it->get<double>());
-		} else
-		if (it->is<bool>()) {
-			args[narg] = (unsigned long)(it->get<bool>());
+		std::string rettype = obj["rettype"].get<std::string>();
+		picojson::array arg = obj["arguments"].get<picojson::array>();
+		unsigned long narg = 0;
+		args = new unsigned long[arg.size()];
+		for (picojson::array::iterator it = arg.begin();
+				it != arg.end(); it++) {
+			args[narg] = 0;
+			if (it->is<std::string>()) {
+				args[narg] = (unsigned long)(it->get<std::string>().c_str());
+			} else
+			if (it->is<double>()) {
+				args[narg] = (unsigned long)(it->get<double>());
+			} else
+			if (it->is<bool>()) {
+				args[narg] = (unsigned long)(it->get<bool>());
+			}
+			narg++;
 		}
-		narg++;
-	}
 #if defined(_MVC_VER)
-	for (unsigned long n = 0; n < narg; n++) {
-		unsigned long _a = args[narg-n-1];
-		_asm {
-			mov eax, _a
-			push eax
+		for (unsigned long n = 0; n < narg; n++) {
+			unsigned long _a = args[narg-n-1];
+			_asm {
+				mov eax, _a
+				push eax
+			}
 		}
-	}
-	_asm {
-		call _p
-		mov _r, eax
-	}
+		_asm {
+			call _p
+			mov _r, eax
+		}
 #elif defined(__GNUC__)
-	for (unsigned long n = 0; n < narg; n++) {
-		unsigned long _a = args[narg-n-1];
+		for (unsigned long n = 0; n < narg; n++) {
+			unsigned long _a = args[narg-n-1];
+			__asm__ (
+				"mov %%eax, %0;"
+				"push %%eax;"
+				::"r"(_a):"%eax"
+			);
+		}
 		__asm__ (
-			"mov %%eax, %0;"
-			"push %%eax;"
-			::"r"(_a):"%eax"
+			"call %%eax;"
+			:"=r"(_r)
+			:"r"(_p)
 		);
-	}
-	__asm__ (
-		"call %%eax;"
-		:"=r"(_r)
-		:"r"(_p)
-	);
 #endif
-	std::stringstream ss;
-	if (rettype.empty() || rettype == "number") {
-		ss << double(_r);
-	} else
-	if (rettype == "string") {
-		ss << (char*)_r;
-	} else
-	if (rettype == "boolean") {
-		ss << int(_r); // shouldn't return string 'true/false'
-	}
-	delete[] args;
+		std::stringstream ss;
+		if (rettype.empty() || rettype == "number") {
+			ss << double(_r);
+		} else
+		if (rettype == "string") {
+			ss << (char*)_r;
+		} else
+		if (rettype == "boolean") {
+			ss << int(_r); // shouldn't return string 'true/false'
+		}
 
-	obj["return"] = ss.str();
-	v = obj;
-	r = v.serialize();
+		obj["return"] = ss.str();
+		v = obj;
+		r = v.serialize();
+	} catch(...) {
+		// perhaps, can't catch access violation of windows for gcc
+		LPVOID lpMessageBuffer;
+		FormatMessage(
+				FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+				NULL,
+				GetLastError(),
+				MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				(LPTSTR) &lpMessageBuffer,
+				0,
+				NULL);
+		obj["error"] = (char*)lpMessageBuffer;
+		LocalFree(lpMessageBuffer);
+		GetLastError();
+		r = v.serialize();
+	}
+	if (args) delete[] args;
 	return r.c_str();
 }
 
