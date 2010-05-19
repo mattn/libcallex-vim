@@ -36,7 +36,7 @@ function! s:transform(obj)
   throw "can't treat unknown type"
 endfunction
 
-let s:template = {'libname': '', 'handle': 0, 'rettype': ''}
+let s:template = {'libname': '', 'handle': 0}
 
 function! s:template.call(func, ...) dict
   let arguments = []
