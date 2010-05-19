@@ -53,19 +53,24 @@ function! s:template.call(func, ...) dict
   \ 'arguments': arguments,
   \ 'rettype': rettype
   \}
-  return libcall('libcallex.dll', 'libcallex_call', s:transform(ctx))
+  let ctx = eval(libcall(s:libfile, 'libcallex_call', s:transform(ctx)))
+  for n in range(len(arguments))
+    let arguments[n] = ctx.arguments[n]
+  endfor
+  return ctx.return
 endfunction
 
 function! s:template.free() dict
   call remove(self, 'call')
   call remove(self, 'free')
-  return libcall('libcallex.dll', 'libcallex_free', s:transform(self))
+  return libcall(s:libfile, 'libcallex_free', s:transform(self))
 endfunction
 
 function! libcallex.load(name) dict
   let lib = copy(s:template)
   let lib.libname = a:name
-  let lib.handle = 0 + libcall('libcallex.dll', 'libcallex_load', a:name)
+  let lib.handle = 0 + libcall(s:libfile, 'libcallex_load', a:name)
   return lib
 endfunction
 
+let s:libfile = substitute(expand('<sfile>'), '\.vim', '.dll', '')

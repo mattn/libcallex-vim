@@ -1,4 +1,4 @@
-so libcallex.vim
+so ../libcallex.vim
 
 silent unlet! lib
 

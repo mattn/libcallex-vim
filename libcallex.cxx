@@ -83,7 +83,9 @@ const char* libcallex_call(const char* context) {
 	}
 	delete[] args;
 
-	r = ss.str();
+	obj["return"] = ss.str();
+	v = obj;
+	r = v.serialize();
 	return r.c_str();
 }
 
