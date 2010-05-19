@@ -31,17 +31,28 @@ function! s:transform(obj)
   throw "can't treat unknown type"
 endfunction
 
-function! libcallex.load(name) dict
-  return {
-  \ 'libname': a:name,
-  \ 'handle': 0 + libcall('libcallex.dll', 'libcallex_loadlib', a:name),
-  \ 'function': '',
-  \ 'arguments': []
+let s:template = {'libname': '', 'handle': 0, 'rettype': ''}
+
+function! s:template.call(func, ...) dict
+  let arguments = []
+  let rettype = ''
+  if len(a:000) > 0
+    let arguments = a:000[0]
+  elseif len(a:000) > 1
+    let rettype = a:000[1]
+  endif
+  let ctx = {
+  \ 'handle': self.handle,
+  \ 'function': a:func,
+  \ 'arguments': arguments,
+  \ 'rettype': rettype
   \}
+  return libcall('libcallex.dll', 'libcallex_call', s:transform(ctx))
 endfunction
 
-function! libcallex.call(ctx, func, args) dict
-  let a:ctx.function = a:func
-  let a:ctx.arguments = a:args
-  let r = libcall('libcallex.dll', 'libcallex_call', s:transform(a:ctx))
+function! libcallex.load(name) dict
+  let lib = copy(s:template)
+  let lib.libname = a:name
+  let lib.handle = 0 + libcall('libcallex.dll', 'libcallex_load', a:name)
+  return lib
 endfunction

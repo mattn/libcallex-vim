@@ -1,8 +1,9 @@
 #include <windows.h>
+#include <sstream>
 #include "picojson.h"
 
 extern "C" _declspec(dllexport)
-const char* libcallex_loadlib(const char* libname) {
+const char* libcallex_load(const char* libname) {
 	HANDLE h = LoadLibrary(libname);
 	static char buf[20];
 	sprintf(buf, "%ld", (long) h);
@@ -25,6 +26,7 @@ const char* libcallex_call(const char* context) {
 	typedef int (__stdcall *FUNCTION)(void);
 	FUNCTION _p = GetProcAddress(h, f.c_str());
 
+	std::string rettype = obj["rettype"].get<std::string>();
 	picojson::array arg = obj["arguments"].get<picojson::array>();
 	unsigned long narg = 0;
 	unsigned long* args = new unsigned long[arg.size()];
@@ -64,13 +66,38 @@ const char* libcallex_call(const char* context) {
 		);
 	}
 	__asm__ (
-		"call %1;"
-		"mov %0, %%eax;"
+		"call %%eax;"
 		:"=r"(_r)
 		:"r"(_p)
 	);
 #endif
-	r += _r;
+	std::stringstream ss;
+	if (rettype.empty() || rettype == "number") {
+		ss << double(_r);
+	} else
+	if (rettype == "string") {
+		ss << (char*)_r;
+	} else
+	if (rettype == "boolean") {
+		ss << int(_r); // shouldn't return string 'true/false'
+	}
 	delete[] args;
+
+	r = ss.str();
 	return r.c_str();
+}
+
+extern "C" _declspec(dllexport)
+const char* libcallex_free(const char* context) {
+	picojson::value v;
+	static std::string r;
+	std::string err = picojson::parse(v, context, context + strlen(context));
+	if (!err.empty() || !v.is<picojson::object>()) {
+		return "";
+	}
+	unsigned long _r = 0;
+	picojson::object obj = v.get<picojson::object>();
+	HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
+	FreeLibrary(h);
+	return "";
 }
