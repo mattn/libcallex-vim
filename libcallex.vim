@@ -9,6 +9,7 @@ function! s:transform(obj)
     let s = string(a:obj)
     let s = substitute(s, '^''\(.*\)''$', '\1', '')
     let s = substitute(s, "''", "'", 'g')
+    let s = substitute(s, '\\', '\\\\', 'g')
     let s = substitute(s, '"', '\"', 'g')
     let s = substitute(s, '"', '\\"', 'g')
     let s = substitute(s, '\n', '\\n', 'g')
@@ -67,3 +68,4 @@ function! libcallex.load(name) dict
   let lib.handle = 0 + libcall('libcallex.dll', 'libcallex_load', a:name)
   return lib
 endfunction
+
