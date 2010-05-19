@@ -53,7 +53,12 @@ function! s:template.call(func, ...) dict
   \ 'arguments': arguments,
   \ 'rettype': rettype
   \}
-  let ret = eval(libcall(s:libfile, 'libcallex_call', s:transform(ctx)))
+  let str = ''
+  silent! let str = libcall(s:libfile, 'libcallex_call', s:transform(ctx))
+  if len(str) == 0
+    throw "unknown error"
+  endif
+  let ret = eval(str)
   if type(ret) == 1
     throw ret
   elseif type(ret) == 4
@@ -65,8 +70,9 @@ function! s:template.call(func, ...) dict
       endfor
       return ret.return
     endif
-  else
+  elseif ret
     throw ret
+  else
   endif
 endfunction
 
