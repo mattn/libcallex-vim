@@ -60,10 +60,9 @@ function! s:template.call(func, ...) dict
   return ctx.return
 endfunction
 
-function! s:template.free() dict
-  call remove(self, 'call')
-  call remove(self, 'free')
-  return libcall(s:libfile, 'libcallex_free', s:transform(self))
+function! libcallex.free(ctx)
+  call remove(a:ctx, 'call')
+  return libcall(s:libfile, 'libcallex_free', s:transform(a:ctx))
 endfunction
 
 function! libcallex.load(name) dict

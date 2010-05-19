@@ -16,4 +16,4 @@ call lib.call('GetSystemDirectoryA', args, 'number')
 let dir = args[0]
 echo "your system directory : " . dir
 
-call lib.free()
+call libcallex.free(lib)

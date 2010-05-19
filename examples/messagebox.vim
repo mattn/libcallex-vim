@@ -4,7 +4,7 @@ silent unlet! lib
 
 let lib = libcallex.load('msvcrt.dll')
 let username = lib.call('getenv', ["USERNAME"], 'string')
-call lib.free()
+call libcallex.free(lib)
 
 let lib = libcallex.load("user32.dll")
 if lib.call('MessageBoxA', [0, "Hello ".username."\r\nCan you see this message?", 'Hello World', 4]) == 6
@@ -12,5 +12,4 @@ if lib.call('MessageBoxA', [0, "Hello ".username."\r\nCan you see this message?"
 else
   call lib.call('MessageBoxA', [0, 'You clicked "NO". Are you all right?', 'Hello World', 0])
 endif
-call lib.free()
-
+call libcallex.free(lib)
