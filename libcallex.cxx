@@ -24,12 +24,12 @@ const char* libcallex_call(const char* context) {
 	picojson::object obj = v.get<picojson::object>();
 	unsigned long* args = NULL;
 	try {
-		unsigned long _r = 0;
+		unsigned long r_ = 0;
 		HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
 		std::string f = obj["function"].get<std::string>();
 
 		typedef int (__stdcall *FUNCTION)(void);
-		FUNCTION _p = GetProcAddress(h, f.c_str());
+		FUNCTION p_ = GetProcAddress(h, f.c_str());
 
 		std::string rettype = obj["rettype"].get<std::string>();
 		picojson::array arg = obj["arguments"].get<picojson::array>();
@@ -51,40 +51,40 @@ const char* libcallex_call(const char* context) {
 		}
 #if defined(_MVC_VER)
 		for (unsigned long n = 0; n < narg; n++) {
-			unsigned long _a = args[narg-n-1];
+			unsigned long a_ = args[narg-n-1];
 			_asm {
-				mov eax, _a
+				mov eax, a_
 				push eax
 			}
 		}
 		_asm {
-			call _p
-			mov _r, eax
+			call p_
+			mov r_, eax
 		}
 #elif defined(__GNUC__)
 		for (unsigned long n = 0; n < narg; n++) {
-			unsigned long _a = args[narg-n-1];
+			unsigned long a_ = args[narg-n-1];
 			__asm__ (
 				"mov %%eax, %0;"
 				"push %%eax;"
-				::"r"(_a):"%eax"
+				::"r"(a_):"%eax"
 			);
 		}
 		__asm__ (
 			"call %%eax;"
-			:"=r"(_r)
-			:"r"(_p)
+			:"=r"(r_)
+			:"r"(p_)
 		);
 #endif
 		std::stringstream ss;
 		if (rettype.empty() || rettype == "number") {
-			ss << double(_r);
+			ss << double(r_);
 		} else
 		if (rettype == "string") {
-			ss << (char*)_r;
+			ss << (char*)r_;
 		} else
 		if (rettype == "boolean") {
-			ss << int(_r); // shouldn't return string 'true/false'
+			ss << int(r_); // shouldn't return string 'true/false'
 		}
 
 		obj["return"] = ss.str();
