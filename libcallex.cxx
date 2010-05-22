@@ -113,12 +113,10 @@ const char* libcallex_call(const char* context) {
 extern "C" _declspec(dllexport)
 const char* libcallex_free(const char* context) {
 	picojson::value v;
-	static std::string r;
 	std::string err = picojson::parse(v, context, context + strlen(context));
 	if (!err.empty() || !v.is<picojson::object>()) {
 		return "";
 	}
-	unsigned long _r = 0;
 	picojson::object obj = v.get<picojson::object>();
 	HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
 	FreeLibrary(h);
