@@ -78,7 +78,8 @@ endfunction
 
 function! libcallex.free(ctx)
   call remove(a:ctx, 'call')
-  return libcall(s:libfile, 'libcallex_free', s:transform(a:ctx))
+  call libcall(s:libfile, 'libcallex_free', s:transform(a:ctx))
+  let a:ctx.handle = 0
 endfunction
 
 function! libcallex.load(name) dict
