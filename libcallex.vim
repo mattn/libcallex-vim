@@ -85,7 +85,7 @@ endfunction
 function! libcallex.load(name) dict
   let lib = copy(s:template)
   let lib.libname = a:name
-  let lib.handle = 0 + libcall(s:libfile, 'libcallex_load', a:name)
+  let lib.handle = libcallnr(s:libfile, 'libcallex_load', a:name)
   if lib.handle == 0
     throw "can't load library: \"" . a:name . "\""
   endif

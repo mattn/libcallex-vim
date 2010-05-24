@@ -3,11 +3,8 @@
 #include "picojson.h"
 
 extern "C" _declspec(dllexport)
-const char* libcallex_load(const char* libname) {
-	HANDLE h = LoadLibrary(libname);
-	static char buf[20];
-	sprintf(buf, "%ld", (long) h);
-	return buf;
+const int libcallex_load(const char* libname) {
+	return (long ) LoadLibrary(libname);
 }
 
 extern "C" _declspec(dllexport)
