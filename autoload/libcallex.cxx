@@ -76,13 +76,13 @@ const char* libcallex_call(const char* context) {
 
 		std::stringstream ss;
 		if (rettype.empty() || rettype == "number") {
-			ss << double(r_);
+			ss << static_cast<double>(r_);
 		} else
 		if (rettype == "string") {
-			ss << (char*)r_;
+			ss << static_cast<char*>(*(char**)&r_);
 		} else
 		if (rettype == "boolean") {
-			ss << int(r_); // shouldn't return string 'true/false'
+			ss << static_cast<int>(r_); // shouldn't return string 'true/false'
 		}
 
 		obj["return"] = ss.str();
