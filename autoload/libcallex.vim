@@ -50,7 +50,6 @@ function! s:template.call(func, ...) dict
   \ 'arguments': arguments,
   \ 'rettype': rettype
   \}
-  echo ctx
   let str = ''
   silent! let str = libcall(s:libfile, 'libcallex_call', s:transform(ctx))
   if len(str) == 0
