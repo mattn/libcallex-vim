@@ -13,7 +13,7 @@ const char* libcallex_call(const char* context) {
 	picojson::value v;
 	std::string err = picojson::parse(v, context, context + strlen(context));
 	if (!err.empty()) {
-		return "faild to parse arguments";
+		return "failed to parse arguments";
 	}
 	if (!v.is<picojson::object>()) {
 		return "unknown type of arguments";
@@ -73,6 +73,7 @@ const char* libcallex_call(const char* context) {
 			:"r"(p_)
 		);
 #endif
+
 		std::stringstream ss;
 		if (rettype.empty() || rettype == "number") {
 			ss << double(r_);

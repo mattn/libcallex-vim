@@ -1,6 +1,3 @@
-silent unlet! g:libcallex
-let g:libcallex = {}
-
 function! s:transform(obj)
   let t = type(a:obj)
   if t == 0
@@ -16,8 +13,6 @@ function! s:transform(obj)
     let s = substitute(s, '\r', '\\r', 'g')
     let s = substitute(s, '\t', '\\t', 'g')
     return '"'.s.'"'
-  elseif t == 2
-    throw "can't treat function reference"
   elseif t == 3
     let ss = []
     for a in a:obj
@@ -27,7 +22,9 @@ function! s:transform(obj)
   elseif t == 4
     let ss = []
     for k in keys(a:obj)
-      call add(ss, s:transform(k).':'.s:transform(a:obj[k]))
+      if type(a:obj[k]) != 2
+        call add(ss, s:transform(k).':'.s:transform(a:obj[k]))
+      endif
 	endfor
 	return '{'.join(ss, ',').'}'
   elseif t == 5
@@ -53,6 +50,7 @@ function! s:template.call(func, ...) dict
   \ 'arguments': arguments,
   \ 'rettype': rettype
   \}
+  echo ctx
   let str = ''
   silent! let str = libcall(s:libfile, 'libcallex_call', s:transform(ctx))
   if len(str) == 0
@@ -76,13 +74,14 @@ function! s:template.call(func, ...) dict
   endif
 endfunction
 
-function! libcallex.free(ctx)
-  call remove(a:ctx, 'call')
-  call libcall(s:libfile, 'libcallex_free', s:transform(a:ctx))
-  let a:ctx.handle = 0
+function! s:template.free()
+  call remove(self, 'call')
+  call remove(self, 'free')
+  call libcall(s:libfile, 'libcallex_free', s:transform(self))
+  let self.handle = 0
 endfunction
 
-function! libcallex.load(name) dict
+function! libcallex#load(name)
   let lib = copy(s:template)
   let lib.libname = a:name
   let lib.handle = libcallnr(s:libfile, 'libcallex_load', a:name)
