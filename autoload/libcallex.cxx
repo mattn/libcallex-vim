@@ -1,13 +1,25 @@
+#ifdef _WIN32
 #include <windows.h>
+#define EXPORT "C" _declspec(dllexport)
+#else
+#include <dlfcn.h>
+#define EXPORT
+#endif
 #include <sstream>
 #include "picojson.h"
 
-extern "C" _declspec(dllexport)
+extern "C" {
+
+EXPORT
 const int libcallex_load(const char* libname) {
+#ifdef _WIN32
 	return (long ) LoadLibrary(libname);
+#else
+	return (long ) dlopen(libname, RTLD_LAZY);
+#endif
 }
 
-extern "C" _declspec(dllexport)
+EXPORT
 const char* libcallex_call(const char* context) {
 	static std::string r;
 	picojson::value v;
@@ -22,11 +34,16 @@ const char* libcallex_call(const char* context) {
 	unsigned long* args = NULL;
 	try {
 		unsigned long r_ = 0;
-		HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
+		void* h = (void*) (long) obj["handle"].get<double>();
 		std::string f = obj["function"].get<std::string>();
 
+#ifdef _WIN32
 		typedef int (__stdcall *FUNCTION)(void);
-		FUNCTION p_ = GetProcAddress(h, f.c_str());
+		FUNCTION p_ = (FUNCTION) GetProcAddress(h, f.c_str());
+#else
+		typedef int (*FUNCTION)(void);
+		FUNCTION p_ = (FUNCTION) dlsym((void *) h, f.c_str());
+#endif
 
 		std::string rettype = obj["rettype"].get<std::string>();
 		picojson::array arg = obj["arguments"].get<picojson::array>();
@@ -90,6 +107,7 @@ const char* libcallex_call(const char* context) {
 		r = v.serialize();
 	} catch(...) {
 		// perhaps, can't catch access violation of windows for gcc
+#ifdef _WIN32
 		LPVOID lpMessageBuffer;
 		FormatMessage(
 				FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
@@ -102,13 +120,16 @@ const char* libcallex_call(const char* context) {
 		obj["error"] = (char*)lpMessageBuffer;
 		LocalFree(lpMessageBuffer);
 		GetLastError();
+#else
+		obj["error"] = dlerror();
+#endif
 		r = v.serialize();
 	}
 	if (args) delete[] args;
 	return r.c_str();
 }
 
-extern "C" _declspec(dllexport)
+EXPORT
 const char* libcallex_free(const char* context) {
 	picojson::value v;
 	std::string err = picojson::parse(v, context, context + strlen(context));
@@ -116,7 +137,13 @@ const char* libcallex_free(const char* context) {
 		return "";
 	}
 	picojson::object obj = v.get<picojson::object>();
-	HINSTANCE h = (HINSTANCE) (long) obj["handle"].get<double>();
+	void* h = (void*) (long) obj["handle"].get<double>();
+#ifdef _WIN32
 	FreeLibrary(h);
+#else
+	dlclose(h);
+#endif
 	return "";
+}
+
 }

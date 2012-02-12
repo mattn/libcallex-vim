@@ -90,4 +90,4 @@ function! libcallex#load(name)
   return lib
 endfunction
 
-let s:libfile = substitute(expand('<sfile>'), '\.vim', '.dll', '')
+let s:libfile = substitute(expand('<sfile>'), '.vim$', (has('win32')||has('win64'))?'.dll':'.so', '')
