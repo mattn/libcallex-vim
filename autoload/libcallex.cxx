@@ -95,7 +95,7 @@ const char* libcallex_call(const char* context) {
 		if (rettype.empty() || rettype == "number") {
 			ss << static_cast<double>(r_);
 		} else
-		if (rettype == "string") {
+		if (rettype == "string" && r_) {
 			ss << static_cast<char*>(*(char**)&r_);
 		} else
 		if (rettype == "boolean") {
