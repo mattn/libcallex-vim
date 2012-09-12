@@ -1,6 +1,6 @@
 #ifdef _WIN32
 #include <windows.h>
-#define EXPORT "C" _declspec(dllexport)
+#define EXPORT _declspec(dllexport)
 #else
 #include <dlfcn.h>
 #define EXPORT
@@ -39,7 +39,7 @@ const char* libcallex_call(const char* context) {
 
 #ifdef _WIN32
 		typedef int (__stdcall *FUNCTION)(void);
-		FUNCTION p_ = (FUNCTION) GetProcAddress(h, f.c_str());
+		FUNCTION p_ = (FUNCTION) GetProcAddress((HMODULE) h, f.c_str());
 #else
 		typedef int (*FUNCTION)(void);
 		FUNCTION p_ = (FUNCTION) dlsym((void *) h, f.c_str());
@@ -139,7 +139,7 @@ const char* libcallex_free(const char* context) {
 	picojson::object obj = v.get<picojson::object>();
 	void* h = (void*) (long) obj["handle"].get<double>();
 #ifdef _WIN32
-	FreeLibrary(h);
+	FreeLibrary((HMODULE) h);
 #else
 	dlclose(h);
 #endif
