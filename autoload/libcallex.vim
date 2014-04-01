@@ -33,7 +33,7 @@ function! s:transform(obj)
   throw "can't treat unknown type"
 endfunction
 
-let s:template = {'libname': '', 'handle': 0}
+let s:template = {'libname': '', 'handle': ''}
 
 function! s:template.call(func, ...) dict
   let arguments = []
@@ -77,14 +77,14 @@ function! s:template.free()
   call remove(self, 'call')
   call remove(self, 'free')
   call libcall(s:libfile, 'libcallex_free', s:transform(self))
-  let self.handle = 0
+  let self.handle = ''
 endfunction
 
 function! libcallex#load(name)
   let lib = copy(s:template)
   let lib.libname = a:name
-  let lib.handle = libcallnr(s:libfile, 'libcallex_load', a:name)
-  if lib.handle == 0
+  let lib.handle = libcall(s:libfile, 'libcallex_load', a:name)
+  if lib.handle == ''
     throw "can't load library: \"" . a:name . "\""
   endif
   return lib

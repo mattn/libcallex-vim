@@ -3,7 +3,7 @@ function! win32#advapi32#GetUserName()
   let advapi32 = libcallex#load('advapi32.dll')
 
   " make address of variable which is stored 256
-  let ptr = float2nr(eval(msvcrt.call('malloc', [4], 'number')))
+  let ptr = 0 + msvcrt.call('malloc', [4], 'ptr')
   call msvcrt.call('memset', [ptr, 0, 4], 'number')
   call msvcrt.call('memset', [ptr+1, 1, 1], 'number')
 

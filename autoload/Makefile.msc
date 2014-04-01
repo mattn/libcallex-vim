@@ -2,4 +2,4 @@ all : libcallex.dll
 	@echo done
 
 libcallex.dll : libcallex.cxx
-	cl /LD /EHsc libcallex.cxx
+	cl /LD /EHsc libcallex.cxx libffi.lib
