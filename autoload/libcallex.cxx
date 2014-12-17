@@ -1,6 +1,6 @@
 #ifdef _WIN32
 #include <windows.h>
-#define EXPORT _declspec(dllexport)
+#define EXPORT __declspec(dllexport)
 #else
 #include <dlfcn.h>
 #define EXPORT
