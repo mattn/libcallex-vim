@@ -1,5 +1,16 @@
+
+ifeq ($(ARCH), x64)
+ASMFILE=mingw_x64_call.s
+else
+ifeq ($(ARCH), x86)
+ASMFILE=mingw_x86_call.s
+else
+$(error set ARCH=x64|x86)
+endif
+endif
+
 all : libcallex.dll
 	@echo done
 
-libcallex.dll : libcallex.cxx
-	g++ -static-libgcc -static-libstdc++ -shared -o libcallex.dll libcallex.cxx -lffi
+libcallex.dll : libcallex.cxx $(ASMFILE)
+	g++ -static -static-libgcc -static-libstdc++ -shared -o libcallex.dll libcallex.cxx $(ASMFILE)

@@ -7,7 +7,7 @@ endfunction
 
 function! win32#user32#CreateWindow(class, name, style, x, y, width, height, parent, menu, instance, param)
   let user32 = libcallex#load("user32.dll")
-  let ret = user32.call('CreateWindowA', [a:class, a:name, str2nr(a:style), str2nr(a:x), str2nr(a:y), str2nr(a:width), str2nr(a:height), str2nr(a:parent), str2nr(a:menu), str2nr(a:instance), str2nr(a:param)], '')
+  let ret = user32.call('CreateWindowA', [a:class, a:name, str2nr(a:style), str2nr(a:x), str2nr(a:y), str2nr(a:width), str2nr(a:height), str2nr(a:parent), str2nr(a:menu), a:instance, str2nr(a:param)], '')
   call user32.free()
   return ret
 endfunction

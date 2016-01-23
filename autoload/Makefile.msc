@@ -1,5 +1,20 @@
+!if "$(ARCH)" == "x64"
+ASMFILE=msc_x64_call
+!elseif "$(ARCH)" == "x86"
+ASMFILE=msc_x86_call
+!else
+!error set ARCH=x64|x86
+!endif
+
 all : libcallex.dll
 	@echo done
 
-libcallex.dll : libcallex.cxx
-	cl /LD /EHsc libcallex.cxx libffi.lib
+libcallex.dll : libcallex.cxx $(ASMFILE).obj
+	cl /LD /EHsc libcallex.cxx $(ASMFILE).obj
+
+msc_x64_call.obj : msc_x64_call.asm
+	ml64 /c msc_x64_call.asm
+
+msc_x86_call.obj : msc_x86_call.asm
+	ml /c msc_x86_call.asm
+

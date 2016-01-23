@@ -85,86 +85,23 @@ const char* libcallex_call(const char* context) {
 			}
 			narg++;
 		}
-#if defined(_WIN64) && defined(_MVC_VER)
-		// XXX: NOT TESTED
-		// XXX: replace push to mov
-		// at lease 32 byte, aligned to 16 byte
-		INTPTR_T stackroom = 32;
-		if (narg > 4)
-			stackroom += 16 * (narg % 2);
-		_asm sub rsp, stackroom
-		for (unsigned long n = narg; n > 4; n--) {
-			INTPTR_T a_ = args[n - 1];
-			_asm push a_
-		}
-		if (narg > 3) {
-			INTPTR_T a_ = args[3];
-			_asm mov a_, r9
-		}
-		if (narg > 2) {
-			INTPTR_T a_ = args[2];
-			_asm mov a_, r8
-		}
-		if (narg > 1) {
-			INTPTR_T a_ = args[1];
-			_asm mov a_, rdx
-		}
-		if (narg > 0) {
-			INTPTR_T a_ = args[0];
-			_asm mov a_, rcx
-		}
-		_asm {
-			call p_
-			mov r_, rax
-		}
-		if (narg > 4) {
-			INTPTR_T a_ = (narg - 4) * sizeof(void *);
-			_asm add rsp, a_
-		}
-		_asm add rsp, stackroom
-#elif defined(_WIN32) && defined(_MVC_VER)
-		for (unsigned long n = 0; n < narg; n++) {
-			INTPTR_T a_ = args[narg-n-1];
-			_asm {
-				mov eax, a_
-				push eax
-			}
-		}
-		_asm {
-			call p_
-			mov r_, eax
-		}
-#elif defined(_WIN64) && defined(___GNUC__)
-		// XXX: NOT TESTED
-		// XXX: replace push to mov
-		// at lease 32 byte, aligned to 16 byte
-		INTPTR_T stackroom = 32;
-		if (narg > 4)
-			stackroom += 16 * (narg % 2);
-		__asm__ ("subq %0, %%rsp"::"r"(stackroom));
-		for (unsigned long n = narg; n > 4; n--)
-			__asm__ ("pushq %0"::"r"(args[n-1]));
-		if (narg > 3) __asm__ ("movq %0, %%r9"::"r"(args[3]));
-		if (narg > 2) __asm__ ("movq %0, %%r8"::"r"(args[2]));
-		if (narg > 1) __asm__ ("movq %0, %%rdx"::"r"(args[1]));
-		if (narg > 0) __asm__ ("movq %0, %%rcx"::"r"(args[0]));
-		__asm__ ("call %0":"=r"(r_):"r"(p_));
-		if (narg > 4)
-			__asm__ ("addq %0, %%rsp"::"r"((narg - 4) * sizeof(void*)));
-		__asm__ ("addq %0, %%rsp"::"r"(stackroom));
+#if defined(_WIN64) && defined(_MSC_VER)
+		// NOTE: Vim's Number is 32bit. We can not handle 64bit pointer as Number.
+		// FIXME: double is not supported
+		extern intptr_t msc_x64_call(FUNCTION p, long narg, INTPTR_T* args);
+		r_ = msc_x64_call(p_, narg, args);
+#elif defined(_WIN32) && defined(_MSC_VER)
+		// FIXME: double is not supported
+		extern intptr_t msc_x86_call(FUNCTION p, long narg, INTPTR_T* args);
+		r_ = msc_x86_call(p_, narg, args);
+#elif defined(_WIN64) && defined(__GNUC__)
+		// FIXME: double is not supported
+		extern intptr_t mingw_x64_call(FUNCTION p, long narg, INTPTR_T* args);
+		r_ = mingw_x64_call(p_, narg, args);
 #elif defined(_WIN32) && defined(__GNUC__)
-		for (unsigned long n = 0; n < narg; n++) {
-			INTPTR_T a_ = args[narg-n-1];
-			__asm__ (
-				"push %0"
-				::"r"(a_)
-			);
-		}
-		__asm__ (
-			"call %0"
-			:"=r"(r_)
-			:"r"(p_)
-		);
+		// FIXME: double is not supported
+		extern intptr_t mingw_x86_call(FUNCTION p, long narg, INTPTR_T* args);
+		r_ = mingw_x86_call(p_, narg, args);
 #elif defined(__linux__) && defined(__x86_64__) && defined(__GNUC__)
 		for (unsigned long n = narg; n > 6; n--)
 			__asm__ ("pushq %0"::"r"(args[n-1]));
