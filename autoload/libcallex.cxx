@@ -111,7 +111,7 @@ const char* libcallex_call(const char* context) {
 		if (narg > 2) __asm__ ("movq %0, %%rdx"::"r"(args[2]));
 		if (narg > 1) __asm__ ("movq %0, %%rsi"::"r"(args[1]));
 		if (narg > 0) __asm__ ("movq %0, %%rdi"::"r"(args[0]));
-		__asm__ ("call %0":"=r"(r_):"r"(p_));
+		__asm__ ("call *%0":"=r"(r_):"r"(p_));
 		if (narg > 6)
 			__asm__ ("addq %0, %%rsp"::"r"((narg - 6) * sizeof(void*)));
 #elif defined(__linux__) && defined(__i386__) && defined(__GNUC__)
